@@ -157,6 +157,16 @@ function initDatabase() {
 
 initDatabase();
 
+function corsAccess(path) {
+  app.options(path, function (req, res) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Methods", "POST, GET, PUT, OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Cookie, Content-Type, User-Agent, X-Set-Cookie");
+    res.type("text");
+    res.send("");
+  });
+}
+
 const app = express();
 
 app.set('trust proxy', true);
@@ -167,7 +177,7 @@ app.disable("x-powered-by");
 const CONTENT_NAME = config.contentOrigin;
 
 function addHSTS(req, res) {
-  if (req.protocol === "https") {
+  if (req.protocol === "https" && req.hostname != "localhost") {
     let time = 24*60*60*1000; // 24 hours
     res.header(
       "Strict-Transport-Security",
@@ -189,7 +199,7 @@ app.use((req, res, next) => {
       req.cspNonce = uuid;
       res.header(
         "Content-Security-Policy",
-        `default-src 'self'; img-src 'self' www.google-analytics.com ${CONTENT_NAME} data:; script-src 'self' www.google-analytics.com 'nonce-${uuid}'; style-src 'self' 'unsafe-inline' https://code.cdn.mozilla.net; connect-src 'self' www.google-analytics.com ${dsn}; font-src https://code.cdn.mozilla.net;`);
+        `default-src 'self'; child-src 'self' ${CONTENT_NAME}; img-src 'self' www.google-analytics.com ${CONTENT_NAME} data:; script-src 'self' www.google-analytics.com 'nonce-${uuid}'; style-src 'self' 'unsafe-inline' https://code.cdn.mozilla.net; connect-src 'self' www.google-analytics.com ${dsn}; font-src https://code.cdn.mozilla.net;`);
       res.header("X-Frame-Options", "DENY");
       addHSTS(req, res);
       next();
@@ -217,8 +227,13 @@ app.use("/homepage", express.static(path.join(__dirname, "static/homepage"), {
 app.use(morgan("combined"));
 
 app.use(function (req, res, next) {
+  console.log("incoming", req.headers);
+  if (req.headers["x-set-cookie"]) {
+    req.headers["cookie"] = req.headers["x-set-cookie"];
+  }
   let cookies = new Cookies(req, res, {keys: dbschema.getKeygrip()});
   req.deviceId = cookies.get("user", {signed: true});
+  console.log("got deviceId:", req.deviceId, req.headers["cookie"]);
   if (req.deviceId) {
     req.userAnalytics = ua(config.gaId, req.deviceId, {strictCidFormat: false});
     if (config.debugGoogleAnalytics) {
@@ -323,6 +338,8 @@ app.get("/favicon.ico", function (req, res) {
   res.redirect(301, "/static/img/pageshot-icon-32.png");
 });
 
+corsAccess("/error");
+
 app.post("/error", function (req, res) {
   let bodyObj = req.body;
   if (typeof bodyObj !== "object") {
@@ -374,11 +391,14 @@ function hashUserId(deviceId) {
   });
 }
 
+corsAccess("/event");
+
 app.post("/event", function (req, res) {
   let bodyObj = req.body;
   if (typeof bodyObj !== "object") {
     throw new Error(`Got unexpected req.body type: ${typeof bodyObj}`);
   }
+  res.header("Access-Control-Allow-Origin", "*");
   hashUserId(req.deviceId).then((userUuid) => {
     let userAnalytics = ua(config.gaId, userUuid.toString(), {strictCidFormat: false});
     if (config.debugGoogleAnalytics) {
@@ -462,6 +482,8 @@ window.location = ${redirectUrlJs};
   }
 });
 
+corsAccess("/api/register");
+
 app.post("/api/register", function (req, res) {
   let vars = req.body;
   let canUpdate = vars.deviceId === req.deviceId;
@@ -471,6 +493,7 @@ app.post("/api/register", function (req, res) {
     simpleResponse(res, "Bad request, no deviceId", 400);
     return;
   }
+  res.header("Access-Control-Allow-Origin", "*");
   return registerLogin(vars.deviceId, {
     secret: vars.secret,
     nickname: vars.nickname || null,
@@ -480,10 +503,12 @@ app.post("/api/register", function (req, res) {
       let cookies = new Cookies(req, res, {keys: dbschema.getKeygrip()});
       cookies.set("user", vars.deviceId, {signed: true});
       cookies.set("abtests", b64EncodeJson(userAbTests), {signed: true});
+      let cookieString = res.getHeader("Set-Cookie").toString().replace(/; path=\/; secure; httponly,?/g, "; ");
       let responseJson = {
         ok: "User created",
         sentryPublicDSN: config.sentryPublicDSN,
-        abTests: userAbTests
+        abTests: userAbTests,
+        "x-set-cookie": cookieString
       };
       simpleResponse(res, JSON.stringify(responseJson), 200);
     } else {
@@ -500,6 +525,8 @@ app.post("/api/register", function (req, res) {
     errorResponse(res, "Error registering:", err);
   });
 });
+
+corsAccess("/api/update");
 
 app.post("/api/update", function (req, res, next) {
   if (! req.deviceId) {
@@ -522,6 +549,8 @@ app.post("/api/update", function (req, res, next) {
   }).catch(next);
 });
 
+corsAccess("/api/login");
+
 app.post("/api/login", function (req, res) {
   let vars = req.body;
   let deviceInfo = {};
@@ -535,12 +564,14 @@ app.post("/api/login", function (req, res) {
       throw e;
     }
   }
+  res.header("Access-Control-Allow-Origin", "*");
   checkLogin(vars.deviceId, vars.secret, deviceInfo.addonVersion).then((userAbTests) => {
     if (userAbTests) {
       let cookies = new Cookies(req, res, {keys: dbschema.getKeygrip()});
       cookies.set("user", vars.deviceId, {signed: true});
       cookies.set("abtests", b64EncodeJson(userAbTests), {signed: true});
-      let responseJson = {"ok": "User logged in", "sentryPublicDSN": config.sentryPublicDSN, abTests: userAbTests};
+      let cookieString = res.getHeader("Set-Cookie").toString().replace(/; path=\/; secure; httponly,?/g, "; ");
+      let responseJson = {"ok": "User logged in", "sentryPublicDSN": config.sentryPublicDSN, abTests: userAbTests, "x-set-cookie": cookieString};
       simpleResponse(res, JSON.stringify(responseJson), 200);
       if (config.gaId) {
         let userAnalytics = ua(config.gaId, vars.deviceId, {strictCidFormat: false});
@@ -562,6 +593,8 @@ app.post("/api/login", function (req, res) {
   });
 });
 
+corsAccess("/api/unload");
+
 app.post("/api/unload", function (req, res) {
   let reason = req.body.reason;
   reason = reason.replace(/[^a-zA-Z0-9]/g, "");
@@ -575,9 +608,15 @@ app.post("/api/unload", function (req, res) {
   simpleResponse(res, "Noted", 200);
 });
 
-app.put("/data/:id/:domain", function (req, res) {
+corsAccess("/data/:id/:domain");
+
+app.put("/data/:id/:domain", saveData);
+app.post("/data/:id/:domain", saveData);
+
+function saveData(req, res) {
   let slowResponse = config.testing.slowResponse;
   let failSometimes = config.testing.failSometimes;
+  res.header("Access-Control-Allow-Origin", "*");
   if (failSometimes && Math.floor(Math.random()*failSometimes)) {
     console.info("Artificially making request fail");
     res.end();
@@ -653,7 +692,7 @@ app.put("/data/:id/:domain", function (req, res) {
   }).catch((err) => {
     errorResponse(res, "Error saving Object:", err);
   });
-});
+}
 
 app.get("/data/:id/:domain", function (req, res) {
   let shotId = `${req.params.id}/${req.params.domain}`;
@@ -1130,6 +1169,12 @@ contentApp.get("/proxy", function (req, res) {
   subreq.end();
 });
 
+// To generate trusted keys on Mac, see: https://certsimple.com/blog/localhost-ssl-fix
+let httpsCredentials = {
+  key: readFileSync(`${process.env.HOME}/.localhost-ssl/key.pem`),
+  cert: readFileSync(`${process.env.HOME}/.localhost-ssl/cert.pem`)
+};
+
 linker.init().then(() => {
   if (config.useVirtualHosts) {
     const mainapp = express();
@@ -1137,17 +1182,20 @@ linker.init().then(() => {
     const contentName = config.contentOrigin.split(":")[0];
     mainapp.use(vhost(siteName, app));
     mainapp.use(vhost(contentName, contentApp));
-    mainapp.listen(config.port);
+    let server = https.createServer(httpsCredentials, mainapp);
+    server.listen(config.port);
     mainapp.get("/", function (req, res) {
       res.send("ok");
     });
-    console.info(`virtual host server listening on http://localhost:${config.port}`);
+    console.info(`virtual host server listening on https://localhost:${config.port}`);
     console.info(`  siteName="${siteName}"; contentName="${contentName}"`);
   } else {
-    app.listen(config.port);
-    console.info(`server listening on http://localhost:${config.port}/`);
-    contentApp.listen(config.contentPort);
-    console.info(`content server listening on http://localhost:${config.contentPort}/`);
+    let appServer = https.createServer(httpsCredentials, app);
+    appServer.listen(config.port);
+    console.info(`server listening on https://localhost:${config.port}/`);
+    let contentServer = https.createServer(httpsCredentials, contentApp);
+    contentServer.listen(config.contentPort);
+    console.info(`content server listening on https://localhost:${config.contentPort}/`);
   }
 }).catch((err) => {
   console.error("Error getting revision:", err, err.stack);

@@ -1,4 +1,4 @@
-/* globals setTimeout, Components, btoa, console, addMessageListener, sendAsyncMessage, content, document, window, makeUuid */
+/* globals setTimeout, btoa, console, document, window, makeUuid */
 /* exported makeStaticHtml */
 
 /** This file is used to turn the document into static HTML with no scripts
@@ -13,23 +13,10 @@
     with lib/framescripter
     */
 
-var isChrome = false;
-
 const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
   let exports = {};
 
   let uuidGenerator;
-  let newURI;
-
-  if (! isChrome) {
-    // Provides setTimeout:
-    Components.utils.import("resource://gre/modules/Timer.jsm");
-    uuidGenerator = Components.classes["@mozilla.org/uuid-generator;1"]
-                          .getService(Components.interfaces.nsIUUIDGenerator);
-    newURI = Components.classes["@mozilla.org/network/io-service;1"]
-      .getService(Components.interfaces.nsIIOService)
-      .newURI;
-  }
 
   // Handles makeUuid in Chrome, and uuidGenerator in Firefox
   function genMakeUuid() {
@@ -45,41 +32,25 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
 
   // This is an option that gets set by the caller of this module, but
   // we store it in a global:
-  var prefInlineCss = false;
+  var prefInlineCss = true;
   var allowUnknownAttributes = false;
-  var annotateForPage = false;
+  var annotateForPage = true;
   var debugInlineCss = false;
 
   function getDocument() {
-    if (isChrome) {
-      return document;
-    } else {
-      return content.document;
-    }
+    return document;
   }
 
   function getLocation() {
-    if (isChrome) {
-      return window.location;
-    } else {
-      return content.location;
-    }
+    return window.location;
   }
 
   function winGetComputedStyle(el) {
-    if (isChrome) {
-      return window.getComputedStyle(el);
-    } else {
-      return content.getComputedStyle(el);
-    }
+    return window.getComputedStyle(el);
   }
 
   function isSVGElement(el) {
-    if (isChrome) {
-      return el instanceof window.SVGElement;
-    } else {
-      return el instanceof content.SVGElement;
-    }
+    return el instanceof window.SVGElement;
   }
 
   /** Does standard HTML quoting, if `leaveQuote` is true it doesn't do &quot; */
@@ -112,8 +83,8 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
   }
 
   function resolveRelativeUrl(url, baseUrl) {
-    let urlObj = newURI(url, "UTF-8", newURI(baseUrl, null, null));
-    return urlObj.spec;
+    let urlObj = new URL(url, baseUrl);
+    return urlObj.toString();
   }
 
   // FIXME: this is a global that is reset on each run, and then added to by
@@ -848,7 +819,7 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
     try {
       rules = stylesheet.cssRules;
     } catch (e) {
-      console.warn("Could not access stylesheet rules: " + e);
+      console.warn(`Could not access stylesheet rules (of ${stylesheet.href}): ${e}`);
     }
     if (rules) {
       traverseRules(rules);
@@ -997,46 +968,6 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
       }
     }
     return twitterCard;
-  }
-
-  if (! isChrome) {
-    let isDisabled = false;
-    addMessageListener("pageshot@documentStaticData:call", function (event) {
-      function send(result) {
-        result.callId = event.data.callId;
-        sendAsyncMessage("pageshot@documentStaticData:return", result);
-      }
-      function sendError(error) {
-        console.error("Error getting static HTML:", error);
-        console.error(error.stack);
-        send({
-          error: {
-            name: error.name,
-            description: error+""
-          }
-        });
-      }
-      if (isDisabled) {
-        return;
-      }
-      try {
-        prefInlineCss = event.data.prefInlineCss;
-        allowUnknownAttributes = event.data.allowUnknownAttributes;
-        annotateForPage = event.data.annotateForPage;
-        debugInlineCss = event.data.debugInlineCss;
-        documentStaticData().then((result) => {
-          send(result);
-        }).catch((error) => {
-          sendError(error);
-        });
-      } catch (error) {
-        sendError(error);
-      }
-    });
-
-    addMessageListener("pageshot@disable", function (event) {
-      isDisabled = true;
-    });
   }
 
   exports.documentStaticData = documentStaticData;

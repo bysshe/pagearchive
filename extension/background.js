@@ -1,5 +1,4 @@
 /* globals chrome, console, XMLHttpRequest, Image, document, setTimeout, makeUuid, navigator */
-let hasUsedMyShots = false;
 let manifest = chrome.runtime.getManifest();
 let backend;
 for (let permission of manifest.permissions) {
@@ -10,39 +9,33 @@ for (let permission of manifest.permissions) {
 }
 backend = backend.replace(/\/*$/, "");
 let registrationInfo;
+let setCookie;
 let initialized = false; // eslint-disable-line no-unused-vars
-const STORAGE_LIMIT = 100;
-const TIME_LIMIT = 1000 * 60 * 60 * 24 * 30; // 30 days
 
 let platformInfo;
 chrome.runtime.getPlatformInfo(function(info) {
   platformInfo = info;
 });
 
-
 chrome.runtime.onInstalled.addListener(function () {
-
 });
 
 chrome.browserAction.onClicked.addListener(function(tab) {
-  sendAnalyticEvent("addon", "click-shot-button");
-  chrome.tabs.insertCSS({
-    file: "css/inline-selection.css"
-  });
+  sendEvent("click-shot-button");
   let scripts = [
     "error-utils.js",
     "uuid.js",
-    "shared/shot.js",
+    "shot.js",
     "randomstring.js",
     "url-domain.js",
     "add-ids.js",
     "make-static-html.js",
     "extractor-worker.js",
-    "annotate-position.js",
-    "selector-util.js",
-    "selector-ui.js",
-    "selector-snapping.js",
-    "shooter-interactive-worker.js",
+    //"annotate-position.js",
+    //"selector-util.js",
+    //"selector-ui.js",
+    //"selector-snapping.js",
+    //"shooter-interactive-worker.js",
     "chrome-shooter.js"
   ];
   let lastPromise = Promise.resolve(null);
@@ -55,17 +48,16 @@ chrome.browserAction.onClicked.addListener(function(tab) {
   });
   lastPromise.then(() => {
     console.log("finished loading scripts:", scripts, chrome.runtime.lastError);
+  }).catch((err) => {
+    console.error("Error loading scripts:", err);
   });
 });
 
-chrome.storage.sync.get(["backend", "hasUsedMyShots", "registrationInfo"], (result) => {
-  if (result.backend) {
+chrome.storage.sync.get(["backend", "registrationInfo"], (result) => {
+  if (result && result.backend) {
     backend = result.backend;
   }
-  if (result.hasUsedMyShots) {
-    hasUsedMyShots = true;
-  }
-  if (result.registrationInfo) {
+  if (result && result.registrationInfo) {
     registrationInfo = result.registrationInfo;
     login();
   } else {
@@ -124,12 +116,14 @@ function login() {
         reject(new Error("Could not log in: " + req.status));
       } else if (req.status === 0) {
         let error = new Error("Could not log in, server unavailable");
-        sendAnalyticEvent("addon", "login-failed");
+        sendEvent("login-failed", {ni: true});
         reject(error);
       } else {
         initialized = true;
+        let result = JSON.parse(req.responseText);
+        setCookie = result["x-set-cookie"];
         console.info("Page Shot logged in");
-        sendAnalyticEvent("addon", "login");
+        sendEvent("login", {ni: true});
         resolve();
       }
     };
@@ -154,8 +148,10 @@ function register() {
       if (req.status == 200) {
         console.info("Registered login");
         initialized = true;
+        let result = JSON.parse(req.responseText);
+        setCookie = result["x-set-cookie"];
         resolve();
-        sendAnalyticEvent("addon", "registered");
+        sendEvent("registered", {ni: true});
       } else {
         console.warn("Error in response:", req.responseText);
         reject(new Error("Bad response: " + req.status));
@@ -174,53 +170,21 @@ function uriEncode(obj) {
 }
 
 chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
-  console.info("onMessage request:", req);
+  console.info(`onMessage request: ${JSON.stringify(req)}`);
   if (req.type == "requestConfiguration") {
-    sendResponse({
+    console.log("result:", {
       backend,
-      hasUsedMyShots,
       deviceId: registrationInfo.deviceId,
       deviceInfo: registrationInfo.deviceInfo,
       secret: registrationInfo.secret
     });
-  } else if (req.type == "setHasUsedMyShots") {
-    hasUsedMyShots = req.value;
-    chrome.storage.sync.set({
-      hasUsedMyShots: req.value
+    sendResponse({
+      backend,
+      deviceId: registrationInfo.deviceId,
+      deviceInfo: registrationInfo.deviceInfo,
+      secret: registrationInfo.secret
     });
-    sendResponse(null);
-  } else if (req.type == "clipImage") {
-    screenshotPage(
-      req.pos,
-      {
-        scrollX: req.scrollX,
-        scrollY: req.scrollY,
-        innerHeight: req.innerHeight,
-        innerWidth: req.innerWidth
-      }
-    ).then((imageUrl) => {
-      sendResponse({imageUrl});
-    });
-    // Indicates async sendResponse:
-    return true;
-  } else if (req.type == "saveShotFullPage") {
-    saveShotFullPage(req.id, req.shot);
-    sendResponse(true);
-  } else if (req.type == "has-saved-shot") {
-    hasSavedShot(req.id).then((result) => {
-      sendResponse(result);
-    });
-    return true;
-  } else if (req.type == "request-saved-shot") {
-    getSavedShot(req.id).then((result) => {
-      sendResponse(result);
-    });
-    return true;
-  } else if (req.type == "remove-saved-shot") {
-    removeSavedShot(req.id).then(() => {
-      sendResponse(null);
-    });
-    return true;
+    console.log("done");
   } else if (req.type == "notifyAndCopy") {
     clipboardCopy(req.url);
     let id = makeUuid();
@@ -231,16 +195,23 @@ chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
       message: "The link to your shot has been copied to the clipboard"
     });
     sendResponse(null);
-  } else if (req.type == "sendAnalyticEvent") {
-    sendAnalyticEvent(req.eventName, req.action, req.label);
+  } else if (req.type == "sendEvent") {
+    sendEvent(req.action, req.label);
     sendResponse(null);
   } else if (req.type == "openTab") {
     chrome.tabs.create({url: req.url});
     sendResponse(null);
+  } else if (req.type == "upload") {
+    putShot(req.url, req.data).then(() => {
+      sendResponse({succeeded: true});
+    }).catch((e) => {
+      sendResponse({succeeded: false, error: ""+e});
+    });
+    return true;
   } else {
     console.error("Message not understood:", req);
   }
-  return undefined;
+  return null;
 });
 
 function screenshotPage(pos, scroll) {
@@ -281,88 +252,6 @@ function screenshotPage(pos, scroll) {
   });
 }
 
-function saveShotFullPage(id, shot) {
-  // Note: duplicates/similar to shotstore.saveShot
-  let name = "page-" + id;
-  chrome.storage.local.get(name, (result) => {
-    let data = result[name] || {};
-    let newData = {
-      body: shot.body || data.body,
-      head: shot.head || data.head,
-      bodyAttrs: shot.bodyAttrs || data.bodyAttrs,
-      headAttrs: shot.headAttrs || data.headAttrs,
-      htmlAttrs: shot.htmlAttrs || data.htmlAttrs,
-      created: Date.now(),
-      readable: shot.readable,
-      resources: shot.resources
-    };
-    chrome.storage.local.set({[name]: newData});
-    setTimeout(cleanupShots, 0);
-  });
-}
-
-function cleanupShots() {
-  // Note: duplications/similar to shotstore.cleanupShots
-  chrome.storage.local.get(null, (storage) => {
-    let keyDates = [];
-    let now = Date.now();
-    let toDelete = [];
-    for (let key in storage) {
-      if (! key.startsWith("page-")) {
-        continue;
-      }
-      let created = storage[key].created || 0;
-      if (! created || created + TIME_LIMIT < now) {
-        toDelete.push(key);
-      } else {
-        keyDates.push({key, created});
-      }
-    }
-    for (let key of toDelete) {
-      console.info("delete by date", key);
-    }
-    console.info("checking items", keyDates.length, STORAGE_LIMIT);
-    if (keyDates.length > STORAGE_LIMIT) {
-      keyDates.sort(function (a, b) {
-        return a.created < b.created ? -1 : 1;
-      });
-      while (keyDates.length > STORAGE_LIMIT) {
-        let {key} = keyDates.shift();
-        console.info("delete by limit", key);
-        toDelete.push(key);
-      }
-    }
-    if (toDelete.length) {
-      chrome.storage.local.remove(toDelete);
-      sendAnalyticEvent("addon", "old-saved-shots-deleted");
-    }
-  });
-}
-
-function getSavedShot(id) {
-  return new Promise((resolve, reject) => {
-    let name = "page-" + id;
-    chrome.storage.local.get(name, (result) => {
-      resolve(result[name]);
-    });
-  });
-}
-
-function hasSavedShot(id) {
-  return getSavedShot(id).then((shot) => {
-    return !!shot;
-  });
-}
-
-function removeSavedShot(id) {
-  return new Promise((resolve, reject) => {
-    let name = "page-" + id;
-    chrome.storage.local.remove(name, () => {
-      resolve();
-    });
-  });
-}
-
 function clipboardCopy(text) {
   let el = document.createElement("textarea");
   document.body.appendChild(el);
@@ -372,11 +261,13 @@ function clipboardCopy(text) {
   document.body.removeChild(el);
 }
 
-function sendAnalyticEvent(eventName, action, label) {
+function sendEvent(action, label) {
+  let eventName = "addon";
   let url = backend + "/event";
   let req = new XMLHttpRequest();
   req.open("POST", url);
   req.setRequestHeader("content-type", "application/json");
+  req.setRequestHeader("x-set-cookie", setCookie);
   req.onload = () => {
     if (req.status >= 300) {
       console.warn("Event gave non-2xx response:", req.status);
@@ -387,4 +278,19 @@ function sendAnalyticEvent(eventName, action, label) {
     action,
     label
   }));
+}
+
+function putShot(url, data) {
+  let req = new Request(url, {
+    method: "PUT",
+    mode: "cors",
+    headers: {"content-type": "application/json", "x-set-cookie": setCookie},
+    body: JSON.stringify(data)
+  });
+  return fetch(req).then((resp) => {
+    if (! resp.ok) {
+      throw new Error("Error: response failed");
+    }
+    return true;
+  });
 }

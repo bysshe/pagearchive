@@ -1,0 +1,38 @@
+{
+  "manifest_version": 2,
+  "name": "Page Archive",
+  "version": "0.1.0",
+  "description": "Page Archive freezes pages",
+  "author": "Ian Bicking, Donovan Preston, and Bram Pitoyo",
+  "homepage_url": "https://github.com/ianb/pagearchive",
+  "offline_enabled": false,
+  "icons": {
+    "24": "icons/ic_camera_alt_black_24dp_1x.png",
+    "48": "icons/ic_camera_alt_black_24dp_2x.png"
+  },
+  "browser_action": {
+    "default_icon": {
+      "24": "icons/ic_camera_alt_black_24dp_1x.png",
+      "48": "icons/ic_camera_alt_black_24dp_2x.png"
+    },
+    "default_title": "Take a shot"
+  },
+  "background": {
+    "scripts": ["uuid.js", "background.js"],
+    "persistent": false
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://localhost:10080/*"],
+      "js": ["site-helper.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "permissions": [
+    "activeTab",
+    "storage",
+    "notifications",
+    "clipboardWrite",
+    "https://localhost:10080/"
+  ]
+}

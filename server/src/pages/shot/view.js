@@ -354,16 +354,16 @@ class Body extends React.Component {
       : null}
     */
 
-    let renderGetFirefox = this.props.userAgent && (this.props.userAgent + "").search(/firefox\/\d+/i) === -1;
-    let renderExtensionNotification = ! (this.props.isExtInstalled || renderGetFirefox);
+    let renderExtensionNotification = ! this.props.isExtInstalled;
     if (this.props.isMobile || this.state.closePageshotBanner) {
-      renderGetFirefox = renderExtensionNotification = false;
+      renderExtensionNotification = false;
     }
+    // FIXME: temp override
+    renderExtensionNotification = false;
 
     return (
       <reactruntime.BodyTemplate {...this.props}>
         <div id="frame" className="inverse-color-scheme full-height column-space">
-          { renderGetFirefox ? this.renderFirefoxRequired() : null }
           { renderExtensionNotification ? this.renderExtRequired() : null }
         <div className="frame-header default-color-scheme">
           <div className="left">
@@ -383,7 +383,6 @@ class Body extends React.Component {
           </div>
         </div>
         { clips }
-        { this.props.shot.showPage ? <span id="copy-flag">Copy</span> : null }
         { this.props.shot.showPage ?
           <iframe width="100%" height={frameHeight} id="frame" src={ shot.contentUrl } style={ {backgroundColor: "#fff"} } /> : null }
         <Footer forUrl={ shot.viewUrl } {...this.props} />
@@ -394,13 +393,6 @@ class Body extends React.Component {
   renderExtRequired() {
     return <div className="default-color-scheme notification">
       <div> Page Shot is an experimental extension for Firefox. <a href={ this.props.backend } onClick={ this.clickedInstallExtension.bind(this) }>Get it here</a></div>
-      <a className="close" onClick={ this.closeGetPageshotBanner.bind(this) }></a>
-    </div>;
-  }
-
-  renderFirefoxRequired() {
-    return <div className="default-color-scheme notification">
-      <div> Page Shot is an experimental extension for Firefox. <a href="https://www.mozilla.org/firefox/new/?utm_source=pageshot.net&utm_medium=referral&utm_campaign=pageshot-acquisition" onClick={ this.clickedInstallFirefox.bind(this) }>Get Firefox now</a></div>
       <a className="close" onClick={ this.closeGetPageshotBanner.bind(this) }></a>
     </div>;
   }
