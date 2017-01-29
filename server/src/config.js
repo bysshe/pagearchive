@@ -289,6 +289,13 @@ var conf = convict({
     default: "",
     env: "FORCE_AB_TESTS",
     arg: "force-ab-tests"
+  },
+  localhostSsl: {
+    doc: "Turn on SSL on localhost, using ~/.localhost-ssl/*",
+    format: Boolean,
+    default: false,
+    env: "LOCALHOST_SSL",
+    arg: "localhost-ssl"
   }
 });
 

@@ -1169,11 +1169,14 @@ contentApp.get("/proxy", function (req, res) {
   subreq.end();
 });
 
-// To generate trusted keys on Mac, see: https://certsimple.com/blog/localhost-ssl-fix
-let httpsCredentials = {
-  key: readFileSync(`${process.env.HOME}/.localhost-ssl/key.pem`),
-  cert: readFileSync(`${process.env.HOME}/.localhost-ssl/cert.pem`)
-};
+let httpsCredentials;
+if (config.localhostSsl) {
+  // To generate trusted keys on Mac, see: https://certsimple.com/blog/localhost-ssl-fix
+  httpsCredentials = {
+    key: readFileSync(`${process.env.HOME}/.localhost-ssl/key.pem`),
+    cert: readFileSync(`${process.env.HOME}/.localhost-ssl/cert.pem`)
+  };
+}
 
 linker.init().then(() => {
   if (config.useVirtualHosts) {
@@ -1182,18 +1185,39 @@ linker.init().then(() => {
     const contentName = config.contentOrigin.split(":")[0];
     mainapp.use(vhost(siteName, app));
     mainapp.use(vhost(contentName, contentApp));
-    let server = https.createServer(httpsCredentials, mainapp);
+    let server;
+    let scheme;
+    if (httpsCredentials) {
+      server = https.createServer(httpsCredentials, mainapp);
+      scheme = "https";
+    } else {
+      server = http.createServer(mainapp);
+      scheme = "http";
+    }
     server.listen(config.port);
     mainapp.get("/", function (req, res) {
       res.send("ok");
     });
-    console.info(`virtual host server listening on https://localhost:${config.port}`);
+    console.info(`virtual host server listening on ${scheme}://localhost:${config.port}`);
     console.info(`  siteName="${siteName}"; contentName="${contentName}"`);
   } else {
-    let appServer = https.createServer(httpsCredentials, app);
+    let appServer;
+    let scheme;
+    if (httpsCredentials) {
+      appServer = https.createServer(httpsCredentials, app);
+      scheme = "https";
+    } else {
+      appServer = http.createServer(app);
+      scheme = "http";
+    }
     appServer.listen(config.port);
-    console.info(`server listening on https://localhost:${config.port}/`);
-    let contentServer = https.createServer(httpsCredentials, contentApp);
+    console.info(`server listening on ${scheme}://localhost:${config.port}/`);
+    let contentServer;
+    if (httpsCredentials) {
+      contentServer = https.createServer(httpsCredentials, contentApp);
+    } else {
+      contentServer = http.createServer(contentApp);
+    }
     contentServer.listen(config.contentPort);
     console.info(`content server listening on https://localhost:${config.contentPort}/`);
   }
