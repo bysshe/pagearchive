@@ -227,13 +227,11 @@ app.use("/homepage", express.static(path.join(__dirname, "static/homepage"), {
 app.use(morgan("combined"));
 
 app.use(function (req, res, next) {
-  console.log("incoming", req.headers);
   if (req.headers["x-set-cookie"]) {
     req.headers["cookie"] = req.headers["x-set-cookie"];
   }
   let cookies = new Cookies(req, res, {keys: dbschema.getKeygrip()});
   req.deviceId = cookies.get("user", {signed: true});
-  console.log("got deviceId:", req.deviceId, req.headers["cookie"]);
   if (req.deviceId) {
     req.userAnalytics = ua(config.gaId, req.deviceId, {strictCidFormat: false});
     if (config.debugGoogleAnalytics) {
@@ -503,7 +501,7 @@ app.post("/api/register", function (req, res) {
       let cookies = new Cookies(req, res, {keys: dbschema.getKeygrip()});
       cookies.set("user", vars.deviceId, {signed: true});
       cookies.set("abtests", b64EncodeJson(userAbTests), {signed: true});
-      let cookieString = res.getHeader("Set-Cookie").toString().replace(/; path=\/; secure; httponly,?/g, "; ");
+      let cookieString = res.getHeader("Set-Cookie").toString().replace(/; path=\/;( secure;)? httponly,?/g, "; ");
       let responseJson = {
         ok: "User created",
         sentryPublicDSN: config.sentryPublicDSN,
@@ -570,7 +568,7 @@ app.post("/api/login", function (req, res) {
       let cookies = new Cookies(req, res, {keys: dbschema.getKeygrip()});
       cookies.set("user", vars.deviceId, {signed: true});
       cookies.set("abtests", b64EncodeJson(userAbTests), {signed: true});
-      let cookieString = res.getHeader("Set-Cookie").toString().replace(/; path=\/; secure; httponly,?/g, "; ");
+      let cookieString = res.getHeader("Set-Cookie").toString().replace(/; path=\/;( secure;)? httponly,?/g, "; ");
       let responseJson = {"ok": "User logged in", "sentryPublicDSN": config.sentryPublicDSN, abTests: userAbTests, "x-set-cookie": cookieString};
       simpleResponse(res, JSON.stringify(responseJson), 200);
       if (config.gaId) {
@@ -1063,7 +1061,7 @@ const contentApp = express();
 
 if (config.useVirtualHosts) {
   contentApp.use((req, res, next) => {
-    res.header("Content-Security-Policy", "default-src 'self'");
+    res.header("Content-Security-Policy", "default-src 'self'; style-src 'self' 'unsafe-inline'");
     let domain = config.siteOrigin.split(":")[0];
     res.header("X-Frame-Options", `ALLOW-FROM ${domain}`);
     addHSTS(req, res);
