@@ -164,7 +164,22 @@ build/addon/lib/httpd.jsm: addon/lib/httpd.jsm
 	@mkdir -p $(@D)
 	cp $< $@
 
-addon: npm set_backend $(data_dest) $(vendor_dest) $(lib_dest) $(sass_addon_dest) $(imgs_addon_dest) $(static_addon_dest) $(shared_addon_dest) build/addon/package.json build/addon/lib/httpd.jsm build/addon/data/pageshot-notification-bar.css build/addon/data/toolbar-button.css
+addon: npm set_backend build/pagearchive.zip build/pagearchive.crx
+
+build/pagearchive.zip: extension/* build/extension/manifest.json
+	@mkdir -p $(@D)
+	rm -f build/pagearchive.zip
+	cd extension && zip -r ../build/pagearchive.zip *
+	cd build/extension && zip ../pagearchive.zip manifest.json
+
+build/pagearchive.crx: build/pagearchive.zip
+	@mkdir -p $(@D)
+	cp $< $@
+
+build/extension/manifest.json: extension/manifest.json build/.backend.txt
+	@mkdir -p $(@D)
+	sed "s!https://localhost:10080/!$(shell cat build/.backend.txt)!g" < extension/manifest.json > $@
+
 
 chrome-extension: npm $(chrome_js_dest) $(chrome_static_dest) $(sass_chrome_dest) $(imgs_chrome_dest) $(static_chrome_dest) $(shared_chrome_dest) $(chrome_external_modules)
 
