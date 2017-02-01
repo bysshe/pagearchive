@@ -32,10 +32,10 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
 
   // This is an option that gets set by the caller of this module, but
   // we store it in a global:
-  var prefInlineCss = true;
+  var prefInlineCss = false;
   var allowUnknownAttributes = false;
   var annotateForPage = true;
-  var debugInlineCss = false;
+  var debugInlineCss = true;
 
   function getDocument() {
     return document;
