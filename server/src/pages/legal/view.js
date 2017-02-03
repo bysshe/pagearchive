@@ -13,60 +13,56 @@ class Terms extends React.Component {
       </p>
       <ul>
         <li>
-          “Page Shot” is an experimental add-on and service exclusively available to Test Pilot users.
+          “Page Archive is an experimental add-on.
         </li>
         <li>
-          Page Shot is provided "as is" and there are no warranties of any kind. There are significant limits on Mozilla's liability for any damages arising from your use of Page Shot.
+          Page Archive is provided "as is" and there are no warranties of any kind. There are significant limits on liability for any damages arising from your use of Page Archive.
         </li>
         <li>
-          Page Shot is currently an experiment. Please do not upload any sensitive information to the Page Shot service. Your Shots may be deleted at any time for any or no reason.
+          Page Archive is currently an experiment. Please do not upload any sensitive information to the Page Archive service. Your Archives may be deleted at any time for any or no reason.
         </li>
       </ul>
       <h3>Terms of Service</h3>
       <h3>Introduction</h3>
       <p>
-        These Terms of Service ("Terms") govern your use of Page Shot (defined below), an experimental service available to Test Pilot users. “Page Shot” includes all of the the following:
+        These Terms of Service ("Terms") govern your use of Page Archive (defined below), an experimental service. “Page Archive” includes all of the the following:
       </p>
       <ul>
         <li>
-          the Page Shot add-on that allows you to capture images of webpages (“Shots”)
+          the Page Archive add-on that allows you to capture copies of webpages (“Archives”)
         </li>
         <li>
-          the Page Shot service that allows you to share your Shots using a URL
+          the Page Archive service that allows you to share your Archives using a URL
         </li>
       </ul>
       <p>
-        ("Page Shot"). By accessing the Page Shot add-on or the Page Shot service, you agree to be bound by these Terms. If a Shot has been shared with you, your access to the Shot is governed by our Websites & Communications <a target="_blank" href="https://www.mozilla.org/en-US/about/legal/terms/mozilla/">Terms of Use</a>.
-      </p>
-      <h3>Test Pilot</h3>
-      <p>
-        In order to use PageShot, you must already be a Test Pilot user and have installed the Test Pilot Add-on.
+        ("Page Archive"). By accessing the Page Archive add-on or the Page Archive service, you agree to be bound by these Terms. If an Archive has been shared with you, your access to the Archive is governed by our Websites & Communications <a target="_blank" href="https://www.mozilla.org/en-US/about/legal/terms/mozilla/">Terms of Use</a>.
       </p>
       <h3>Features</h3>
       <p>
-        Page Shot lets you save web content and share it with others via a URL. You can save entire webpages or just a portion of a webpage to share with others. You can view or delete each of your shots from the “My Shots” page.
+        Page Archive lets you save web content and share it with others via a URL. You can save entire webpages for your own reference or to share with others. You can view or delete each of your archives from the “My Archives” page.
       </p>
       <h3>Privacy Policy</h3>
       <p>
-        The Test Pilot Page Shot website and the <a href="https://testpilot.firefox.com/privacy" target="blank">Test Pilot Privacy Notice</a> describes details on what we receive from your use of Page Shot and how we use that information. We use the information we receive through Page Shot as described in our <a href="https://www.mozilla.org/privacy/" target="blank">Mozilla Privacy Policy</a>.
+        The Test Pilot Page Shot website and the <a href="https://testpilot.firefox.com/privacy" target="blank">Test Pilot Privacy Notice</a> describes details on what we receive from your use of Page Shot and how we use that information. We use the information we receive through Page Archive as described in our <a href="https://www.mozilla.org/privacy/" target="blank">Mozilla Privacy Policy</a>.  Note that these documents are accurate, but this service is not hosted by Mozilla.
       </p>
       <h3>Your Content in our Services</h3>
       <p>
-        You may upload content as part of Page Shot. By uploading content, you hereby grant us a nonexclusive, royalty-free, worldwide license to use your uploaded content in connection with the provision of the Page Shot service. You retain any intellectual property rights you may have to your uploaded content. You hereby represent and warrant that your uploaded content and use of the Page Shot service will not infringe the rights of any third party and will comply with any content guidelines presented by Mozilla.
+        You may upload content as part of Page Archive. By uploading content, you hereby grant us a nonexclusive, royalty-free, worldwide license to use your uploaded content in connection with the provision of the Page Archive service. You retain any intellectual property rights you may have to your uploaded content. You hereby represent and warrant that your uploaded content and use of the Page Archive service will not infringe the rights of any third party and will comply with any content guidelines presented by Mozilla.
       </p>
-      <h3>Mozilla's Proprietary Rights</h3>
+      <h3>Proprietary Rights</h3>
       <p>
-        Mozilla does not grant you any intellectual property rights in Page Shot that are not specifically stated in these Terms. For example, these Terms do not provide the right to use any of Mozilla's copyrights, trade names, trademarks, service marks, logos, domain names, or other distinctive brand features. The source code for the Page Shot add-on and service are available under and subject to their respective open source licenses.
+        The Page Archive service does not grant you any intellectual property rights in Page Archive that are not specifically stated in these Terms. For example, these Terms do not provide the right to use any copyrights, trade names, trademarks, service marks, logos, domain names, or other distinctive brand features. The source code for the Page Archive add-on and service are available under and subject to their respective open source licenses.
       </p>
       <h3>Term; Termination</h3>
       <p>
-        These Terms will continue to apply until ended by either you or Mozilla. You can choose to end them at any time for any reason by deleting all of your Shots, uninstalling the Page Shot experimental add-on and discontinuing your use of Page Shot.
+        These Terms will continue to apply until ended by either you or the service. You can choose to end them at any time for any reason by deleting all of your Archives, uninstalling the Page Archive experimental add-on and discontinuing your use of Page Archive.
       </p>
       <p>
-        We may suspend or terminate your access to Page Shot at any time for any reason, including, but not limited to, if we reasonably believe: (i) you have violated these Terms, (ii) you create risk or possible legal exposure for us; or (iii) our provision of Page Shot to you is no longer commercially viable. We will make reasonable efforts to notify you the next time you attempt to access Page Shot.
+        We may suspend or terminate your access to Page Archive at any time for any reason, including, but not limited to, if we reasonably believe: (i) you have violated these Terms, (ii) you create risk or possible legal exposure for us; or (iii) our provision of Page Archive to you is no longer commercially viable. We will make reasonable efforts to notify you the next time you attempt to access Page Archive.
       </p>
       <p>
-        In all such cases, these Terms shall terminate, including, without limitation, your license to use Page Shot, except that the following sections shall continue to apply: Indemnification, Disclaimer; Limitation of Liability, Miscellaneous.
+        In all such cases, these Terms shall terminate, including, without limitation, your license to use Page Archive, except that the following sections shall continue to apply: Indemnification, Disclaimer; Limitation of Liability, Miscellaneous.
       </p>
       <h3>Indemnification</h3>
       <p>
@@ -81,22 +77,16 @@ class Terms extends React.Component {
       </p>
       <h3>Modifications to these Terms</h3>
       <p>
-        Mozilla may update these Terms from time to time to address a new feature of Page Shot or to clarify a provision. The updated Terms will be posted online. If the changes are substantive, we will announce the update through Mozilla's usual channels for such announcements such as blog posts, banners, and forums. Your continued use of Page Shot after the effective date of such changes constitutes your acceptance of such changes. To make your review more convenient, we will post an effective date at the top of this page.
+        We may update these Terms from time to time to address a new feature of Page Archive or to clarify a provision. The updated Terms will be posted online. If the changes are substantive, we will announce the update through usual channels for such announcements such as blog posts, banners, and forums. Your continued use of Page Archive after the effective date of such changes constitutes your acceptance of such changes. To make your review more convenient, we will post an effective date at the top of this page.
       </p>
       <h3>Miscellaneous</h3>
       <p>
-        These Terms constitute the entire agreement between you and Mozilla concerning Page Shot and are governed by the laws of the state of California, U.S.A., excluding its conflict of law provisions. If any portion of these Terms is held to be invalid or unenforceable, the remaining portions will remain in full force and effect. In the event of a conflict between a translated version of these terms and the English language version, the English language version shall control.
+        These Terms constitute the entire agreement between you and the Page Archive service concerning Page Archive and are governed by the laws of the state of California, U.S.A., excluding its conflict of law provisions. If any portion of these Terms is held to be invalid or unenforceable, the remaining portions will remain in full force and effect. In the event of a conflict between a translated version of these terms and the English language version, the English language version shall control.
       </p>
       <h3>Contact Us</h3>
       <p>
-        Contact Mozilla at
+        Contact the service runners at ian@ianbicking.org
       </p>
-      <address>
-        Mozilla Corporation<br />
-        Attn: Mozilla – Legal Notices<br />
-        331 E. Evelyn Ave.,<br />
-        Mountain View, CA 94041
-      </address>
     </div>;
   }
 }
@@ -105,13 +95,13 @@ class Privacy extends React.Component {
   render() {
     return <div>
       <p>
-        We care about your privacy. When Mozilla (that's us) collects information about you, our <a href="https://www.mozilla.org/privacy/" target="blank">Mozilla Privacy Policy</a> describes how we handle that information.
+        We care about your privacy. When this service collects information about you, our <a href="https://www.mozilla.org/privacy/" target="blank">Privacy Policy</a> describes how we handle that information.
       </p>
       <p>
-        Page Shot is an experimental service for Test Pilot users that allows them to capture, save, and share images of webpages (“Shots”). For Test Pilot users of the Page Shot add-on and Page Shot service, the data we collect is described in the Page Shot Test Pilot experiment page and in the <a href="https://testpilot.firefox.com/privacy" target="_blank">Test Pilot Privacy Notice.</a>
+        Page Archive is an experimental service users that allows you to capture, save, and share copies of webpages (“Archives”). The data we collect is described in the Page Shot Test Pilot experiment page and in the <a href="https://testpilot.firefox.com/privacy" target="_blank">Test Pilot Privacy Notice.</a>
       </p>
       <p>
-        For all visits to the Page Shot website (for example, if someone has shared a Shot with you), the data we collect is described in our <a href="https://www.mozilla.org/privacy/websites/" target="_blank">Websites, Communications & Cookies Privacy Notice</a>.
+        For all visits to the Page Archive website (for example, if someone has shared a Archive with you), the data we collect is described in our <a href="https://www.mozilla.org/privacy/websites/" target="_blank">Websites, Communications & Cookies Privacy Notice</a>.
       </p>
     </div>;
   }

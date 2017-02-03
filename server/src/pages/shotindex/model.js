@@ -2,9 +2,9 @@ const { createProxyUrl } = require("../../proxy-url");
 
 exports.createModel = function (req) {
   let query = req.query.q;
-  let title = "My Shots";
+  let title = "My Archives";
   if (query) {
-    title = `My Shots: search for ${query}`;
+    title = `My Archives: search for ${query}`;
   }
   let serverModel = {
     title,

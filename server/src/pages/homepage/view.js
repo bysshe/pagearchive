@@ -38,7 +38,7 @@ class Body extends React.Component {
     if (this.props.showMyShots) {
       myShots = <button className="pageshot-myshots" onClick={ this.onClickMyShots.bind(this) }>
         <div className="pageshot-pre-myshots"></div>
-        <span className="pageshot-myshots-text">My Shots</span>
+        <span className="pageshot-myshots-text">My Archives</span>
         <div className="pageshot-post-myshots"></div>
       </button>;
     }
@@ -47,11 +47,11 @@ class Body extends React.Component {
         <div className="vertical-centered-content-wrapper">
           <div className="stars"></div>
           <div className="copter fly-up"></div>
-          <h1>Welcome to Page Shot</h1>
-          <a className="button primary" href="https://testpilot.firefox.com/experiments/page-shot">Install Page Shot with Firefox Test Pilot</a>
+          <h1>Welcome to Page Archive</h1>
+          <a className="button primary" href="https://testpilot.firefox.com/experiments/page-shot">Install Page Archive</a>
           { myShots }
           <div className="social-links">
-            <a href="https://github.com/mozilla-services/pageshot" target="_blank" className="link-icon github" title="GitHub"></a>
+            <a href="https://github.com/ianb/pagearchive" target="_blank" className="link-icon github" title="GitHub"></a>
           </div>
         </div>
       </reactruntime.BodyTemplate>

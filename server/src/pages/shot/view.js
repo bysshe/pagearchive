@@ -325,7 +325,7 @@ class Body extends React.Component {
     }
 
     let myShotsHref = "/shots";
-    let myShotsText = <span className="back-to-index">My Shots <span className="arrow-icon"/></span>;
+    let myShotsText = <span className="back-to-index">My Archives <span className="arrow-icon"/></span>;
     if (!this.props.isOwner) {
       myShotsText = <span className="back-to-home">
         <span className="sub">
