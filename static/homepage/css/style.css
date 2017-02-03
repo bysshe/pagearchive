@@ -50,7 +50,7 @@ html {
 }
 
 .copter {
-  background-image: url('/static/img/copter@2x.png');
+  /* background-image: url('/static/img/copter@2x.png'); */
   background-repeat: no-repeat;
   background-size: 260px auto;
   height: 220px;
