@@ -1095,8 +1095,8 @@ contentApp.get("/content/:id/:domain", function (req, res) {
       <meta name="referrer" content="origin" />
       <base href="${shot.url}" target="_blank" />
       <script nonce="${req.cspNonce}">var SITE_ORIGIN = "${req.protocol}://${config.siteOrigin}";</script>
-      <script src="${req.staticLinkWithHost("js/content-helper.js")}"></script>
-      <link rel="stylesheet" href="${req.staticLinkWithHost("css/content.css")}">
+      <script src="${req.staticLinkWithHost("static/js/content-helper.js")}"></script>
+      <!-- <link rel="stylesheet" href="${req.staticLinkWithHost("css/content.css")}"> -->
       `,
       rewriteLinks: (key, data) => {
         if (! data) {
