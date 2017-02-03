@@ -1,6 +1,7 @@
 /* globals chrome, console, XMLHttpRequest, Image, document, setTimeout, makeUuid, navigator */
 let manifest = chrome.runtime.getManifest();
 let backend;
+let lastScreenshot;
 for (let permission of manifest.permissions) {
   if (permission.search(/^https?:\/\//i) != -1) {
     backend = permission;
@@ -21,6 +22,11 @@ chrome.runtime.onInstalled.addListener(function () {
 });
 
 chrome.browserAction.onClicked.addListener(function(tab) {
+  if (tab.url.startsWith("chrome:")) {
+    sendEvent("open-my-shots");
+    chrome.tabs.update(tab.id, {url: backend + "/shots"});
+    return;
+  }
   sendEvent("click-shot-button");
   let scripts = [
     "error-utils.js",
@@ -31,11 +37,6 @@ chrome.browserAction.onClicked.addListener(function(tab) {
     "add-ids.js",
     "make-static-html.js",
     "extractor-worker.js",
-    //"annotate-position.js",
-    //"selector-util.js",
-    //"selector-ui.js",
-    //"selector-snapping.js",
-    //"shooter-interactive-worker.js",
     "chrome-shooter.js"
   ];
   let lastPromise = Promise.resolve(null);
@@ -46,8 +47,29 @@ chrome.browserAction.onClicked.addListener(function(tab) {
       });
     });
   });
+  let capturePromise = new Promise((resolve, reject) => {
+    chrome.tabs.captureVisibleTab((dataUrl) => {
+      resolve(dataUrl);
+    });
+  });
   lastPromise.then(() => {
-    console.log("finished loading scripts:", scripts, chrome.runtime.lastError);
+    console.info("finished loading scripts:", scripts, chrome.runtime.lastError);
+    return capturePromise;
+  }).then((dataUrl) => {
+    return new Promise((resolve, reject) => {
+      let img = document.createElement("img");
+      img.src = dataUrl;
+      img.onload = () => {
+        let canvas = document.createElement("canvas");
+        canvas.width = 320;
+        canvas.height = canvas.width * (img.height / img.width);
+        let context = canvas.getContext("2d");
+        context.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL());
+      };
+    });
+  }).then((smallDataUrl) => {
+    lastScreenshot = {image: smallDataUrl, url: tab.url};
   }).catch((err) => {
     console.error("Error loading scripts:", err);
   });
@@ -170,7 +192,9 @@ function uriEncode(obj) {
 }
 
 chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
-  console.info(`onMessage request: ${JSON.stringify(req)}`);
+  if (req.type != "upload") {
+    console.info(`onMessage request: ${JSON.stringify(req)}`);
+  }
   if (req.type == "requestConfiguration") {
     console.log("result:", {
       backend,
@@ -185,12 +209,14 @@ chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
       secret: registrationInfo.secret
     });
     console.log("done");
+  } else if (req.type == "requestScreenshot") {
+    sendResponse(lastScreenshot);
   } else if (req.type == "notifyAndCopy") {
     clipboardCopy(req.url);
     let id = makeUuid();
     chrome.notifications.create(id, {
       type: "basic",
-      iconUrl: "img/clipboard-32.png",
+      iconUrl: "icons/ic_camera_alt_black_24dp_2x.png",
       title: "Link Copied",
       message: "The link to your shot has been copied to the clipboard"
     });

@@ -20,7 +20,6 @@ const chromeShooter = (function () { // eslint-disable-line no-unused-vars
     let promises = [];
     addIds.setIds();
     promises.push(makeStaticHtml.documentStaticData().then((result) => {
-      console.log("got attrs from static:", result);
       shot.update(result);
     }));
     let attrs = extractorWorker.extractData();
@@ -103,7 +102,14 @@ const chromeShooter = (function () { // eslint-disable-line no-unused-vars
     );
     console.log("Created shot:", shot.viewUrl);
     exports.init().then(() => {
-      completeResolver();
+      setTimeout(() => {
+        exports.getLastScreenshot().then((url) => {
+          shot.fullScreenThumbnail = url;
+          completeResolver();
+        }).catch((e) => {
+          console.error("Error getting screenshot:", e);
+        });
+      }, 200);
     });
   }
 
@@ -128,6 +134,19 @@ const chromeShooter = (function () { // eslint-disable-line no-unused-vars
       type: "sendEvent",
       action,
       label
+    });
+  };
+
+  exports.getLastScreenshot = function () {
+    return new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage({type: "requestScreenshot"}, (response) => {
+        if (location.href != response.url) {
+          console.warn("Unexpected mismatch of URL:", location.href, response.url);
+          resolve(null);
+        } else {
+          resolve(response.image);
+        }
+      });
     });
   };
 

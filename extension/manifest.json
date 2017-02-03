@@ -30,9 +30,11 @@
   ],
   "permissions": [
     "activeTab",
+    "tabs",
     "storage",
     "notifications",
     "clipboardWrite",
+    "<all_urls>",
     "https://localhost:10080/"
   ]
 }
